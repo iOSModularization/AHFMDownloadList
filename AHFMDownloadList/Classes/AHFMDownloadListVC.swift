@@ -62,7 +62,7 @@ public class AHFMDownloadListVC: UIViewController {
     fileprivate lazy var downloadItems = [DownloadItem]()
     fileprivate weak var tableView: UITableView!
     fileprivate lazy var spaceUsedLabel = UILabel()
-    fileprivate lazy var urlToIndexPath = [String: IndexPath]()
+    fileprivate lazy var urlToIndex = [String: Int]()
     
     public var manager: AHFMDownloadListVCDelegate?
     
@@ -86,7 +86,7 @@ public class AHFMDownloadListVC: UIViewController {
         }
         
         self.downloadItems.removeAll()
-        self.urlToIndexPath.removeAll()
+        self.urlToIndex.removeAll()
         
         for itemDict in data {
             let item = DownloadItem(dict: itemDict)
@@ -104,6 +104,7 @@ public class AHFMDownloadListVC: UIViewController {
                     guard self != nil else {return}
                     let index = i
                     self?.downloadItems[index].fileSize = Int(fileSize)
+                    self?.urlToIndex[item.remoteURL] = index
                     urlToSize[item.remoteURL] = Int(fileSize)
                     group.leave()
                 })
@@ -161,8 +162,6 @@ extension AHFMDownloadListVC: UITableViewDelegate, UITableViewDataSource {
             item.downloadState = AHDownloader.getState(item.remoteURL)
             self.downloadItems[indexPath.row] = item
         }
-        self.urlToIndexPath[item.remoteURL] = indexPath
-        
         
         cell.downloadItem = item
         if cell.delegate == nil {
@@ -187,10 +186,10 @@ extension AHFMDownloadListVC: UITableViewDelegate, UITableViewDataSource {
 //MARK:- AHDownloaderDelegate
 extension AHFMDownloadListVC: AHDownloaderDelegate {
     public func downloaderWillStartDownload(url:String){
-        guard let indexPath = self.urlToIndexPath[url] else {
+        guard let index = self.urlToIndex[url] else {
             return
         }
-        
+        let indexPath = IndexPath(row: index, section: 0)
         if let cell = tableView.cellForRow(at: indexPath) as? AHFMDownloadListCell {
             cell.downloadItem?.downloadState = self.downloadItems[indexPath.row].downloadState
             cell.showPending()
@@ -200,22 +199,18 @@ extension AHFMDownloadListVC: AHDownloaderDelegate {
         checkState(url)
     }
     public func downloaderDidFinishDownload(url:String, localFilePath: String){
-        guard let indexPath = self.urlToIndexPath[url] else {
-            return
-        }
-        self.downloadItems[indexPath.row].downloadState = .succeeded
         checkState(url)
     }
     public func downloaderDidPaused(url: String){
         checkState(url)
     }
     public func downloaderDidPausedAll(){
-        for url in self.urlToIndexPath.keys {
+        for url in self.urlToIndex.keys {
             checkState(url)
         }
     }
     public func downloaderDidResumedAll(){
-        for url in self.urlToIndexPath.keys {
+        for url in self.urlToIndex.keys {
             checkState(url)
         }
     }
@@ -223,7 +218,7 @@ extension AHFMDownloadListVC: AHDownloaderDelegate {
         checkState(url)
     }
     public func downloaderCancelAll(){
-        for url in self.urlToIndexPath.keys {
+        for url in self.urlToIndex.keys {
             checkState(url)
         }
     }
@@ -232,9 +227,10 @@ extension AHFMDownloadListVC: AHDownloaderDelegate {
     }
     
     fileprivate func checkState(_ urlStr: String) {
-        guard let indexPath = self.urlToIndexPath[urlStr] else {
+        guard let index = self.urlToIndex[urlStr] else {
             return
         }
+        let indexPath = IndexPath(row: index, section: 0)
         
         self.downloadItems[indexPath.row].downloadState = AHDownloader.getState(urlStr)
         if let cell = tableView.cellForRow(at: indexPath) as? AHFMDownloadListCell {
