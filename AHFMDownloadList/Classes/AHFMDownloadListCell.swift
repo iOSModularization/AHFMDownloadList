@@ -100,6 +100,19 @@ public class AHFMDownloadListCell: UITableViewCell {
             downloadBtn.isHidden = false
             let img = UIImage(name: "download-pending", user: self)
             downloadBtn.setImage(img, for: .normal)
+        
+        case .notStarted:
+            // not started yet has a progress > 0.0 -- an archived task
+            if let progress = downloadItem.downloadedProgress, progress > 0.0 {
+                indicator.stopAnimating()
+                indicator.isHidden = true
+                downloadBtn.isHidden = false
+                let img = UIImage(name: "download-pending", user: self)
+                downloadBtn.setImage(img, for: .normal)
+                
+            }else {
+                fallthrough
+            }
         default:
             indicator.stopAnimating()
             indicator.isHidden = true
@@ -108,101 +121,6 @@ public class AHFMDownloadListCell: UITableViewCell {
             downloadBtn.setImage(img, for: .normal)
         }
     }
-    
-    
-//    private func setupMonitor() {
-//        episodeVM?.monitor(willStartCallback: { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download-pending", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            
-//            },didStartCallback: { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.startAnimating()
-//            self?.indicator.isHidden = false
-//            self?.downloadBtn.isHidden = true
-//
-//           }, progressCallback: nil,
-//            didFinishCallback: { [weak self] (vm, filePath) in
-//
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM else{return}
-//            guard originalVM == vm else {return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download-check", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            
-//           }, didPauseCallback: { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download-pending", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            
-//           }, didResumeCallback: { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.startAnimating()
-//            self?.indicator.isHidden = false
-//            self?.downloadBtn.isHidden = true
-//            
-//           }, didCancelCallback: { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            
-//           }, didCancelAllCallback: {[weak self] in
-//            guard self != nil else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            
-//           }, didDeleteCallback: {[weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            print("ListCell didDeleteCallback id:\(vm.episode.id)")
-//           
-//           }) { [weak self] (vm) in
-//            guard self != nil else{return}
-//            guard let originalVM = self?.episodeVM, originalVM == vm else{return}
-//            
-//            self?.indicator.stopAnimating()
-//            self?.indicator.isHidden = true
-//            let img = UIImage(name: "download", user: self!)
-//            self?.downloadBtn.setImage(img, for: .normal)
-//            self?.downloadBtn.isHidden = false
-//            print("there's error in the download task for ep:\(vm.episode.id)")
-//            
-//            }
-//    }
     override public func awakeFromNib() {
         super.awakeFromNib()
         let downloadImg = UIImage(name: "download", user: self)

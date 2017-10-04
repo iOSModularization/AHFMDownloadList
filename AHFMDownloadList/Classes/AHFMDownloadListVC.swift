@@ -36,7 +36,9 @@ struct DownloadItem {
     var createdAt: String?
     var duration: TimeInterval?
     var fileSize: Int?
+    var downloadedProgress: Double?
     var downloadState: AHDataTaskState = .notStarted
+    
     
     init(dict: [String: Any]) {
         self.id = dict["id"] as! Int
@@ -46,10 +48,13 @@ struct DownloadItem {
         self.duration = dict["duration"] as? TimeInterval
         self.fileSize = dict["fileSize"] as? Int
         self.createdAt = dict["createdAt"] as? String
-        
+        self.downloadedProgress = dict["downloadedProgress"] as? Double
         if let isDownloaded = dict["isDownloaded"] as? Bool, isDownloaded == true {
             self.downloadState = .succeeded
-        }else {
+        }else if let progress = self.downloadedProgress, progress > 0, AHDownloader.getState(self.remoteURL) == .notStarted{
+            // the task is not started yet there's a downloaded progress -- this is an archived task.
+            self.downloadState = .pausing
+        }else{
             self.downloadState = AHDownloader.getState(self.remoteURL)
         }
         
@@ -101,16 +106,23 @@ public class AHFMDownloadListVC: UIViewController {
                 group.enter()
                 AHFileSizeProbe.probe(urlStr: item.remoteURL, {[weak self] (fileSize) in
                     
-                    guard self != nil else {return}
+                    guard self != nil else {
+                        group.leave()
+                        return
+                    }
                     let index = i
                     self?.downloadItems[index].fileSize = Int(fileSize)
                     self?.urlToIndex[item.remoteURL] = index
                     urlToSize[item.remoteURL] = Int(fileSize)
                     group.leave()
                 })
+            }else{
+                let index = i
+                self.urlToIndex[item.remoteURL] = index
             }
         }
-        AHDownloader.removeDelegate(self)
+        
+
         group.notify(queue: DispatchQueue.main) {[weak self] in
             SVProgressHUD.dismiss()
             guard self != nil else {return}
@@ -246,7 +258,15 @@ extension AHFMDownloadListVC: AHFMDownloadListCellDelegate{
     func listCellDidTapDownloadBtn(_ cell: AHFMDownloadListCell) {
         if let indexPath = tableView.indexPath(for: cell) {
             let item = self.downloadItems[indexPath.row]
-            AHDownloader.download(item.remoteURL)
+            if item.downloadState == .notStarted {
+                if let progress = item.downloadedProgress, progress > 0.0 {
+                    
+                }else{
+                    AHDownloader.download(item.remoteURL)
+                }
+                
+            }
+           
     
         }
     }
