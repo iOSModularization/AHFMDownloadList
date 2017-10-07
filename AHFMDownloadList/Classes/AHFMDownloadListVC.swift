@@ -26,6 +26,9 @@ private let TopSeparatorHeight: CGFloat = 25.0
     
     // info [url: fileSize]
     func downloadListVC(_ vc: AHFMDownloadListVC, didUpdateFileSizes info:[String:Int])
+    
+    func viewWillAppear(_ vc: UIViewController)
+    func viewWillDisappear(_ vc: UIViewController)
 }
 
 
@@ -149,11 +152,16 @@ extension AHFMDownloadListVC {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.spaceUsedLabel.text = "Free Space: \(UIDevice.freeDiskSpaceStr)MB"
-        
+        self.manager?.viewWillAppear(self)
         SVProgressHUD.show()
         self.manager?.downloadListVCShouldLoadData(self)
     }
 
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.manager?.viewWillDisappear(self)
+    }
+    
 }
 
 
